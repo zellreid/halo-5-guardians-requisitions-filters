@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Halo 5 Guardians Requisitions
 // @namespace    https://github.com/zellreid/halo-5-guardians-requisitions-filters
-// @version      2.0
+// @version      2.5
 // @description  A Tampermonkey userscript to add additional asset filters to the Halo 5 Guardians Requisitions
 // @author       ZellReid
 // @homepage     https://github.com/zellreid/halo-5-guardians-requisitions-filters
@@ -16,16 +16,21 @@
 (function() {
     `use strict`;
 
-    var owned = true;
-    var notOwned = true;
-    var multi = false;
-    var addMulti = true;
-
-    var common = true;
-    var uncommon = true;
-    var rare = true;
-    var ultraRare = true;
-    var legendary = true;
+    window.injectedFilters = {
+        owned: {
+            owned: true,
+            notOwned: true,
+            multi: false,
+            addMulti: true
+        },
+        rarity: {
+            common: true,
+            uncommon: true,
+            rare: true,
+            ultraRare: true,
+            legendary: true
+        }
+    };
 
     function getFilterContainer() {
         return document.getElementsByClassName(`service-record-header_header__132KP`)[0];
@@ -48,10 +53,10 @@
             ownedControlsElement.className = `filter-controls-owned`;
 
             //Owned
-            var ownedCheckbox = createCheckbox(`Owned`, owned, toggleOwned, null);
+            var ownedCheckbox = createCheckbox(`Owned`, window.injectedFilters.owned.owned, toggleOwned, `ifcOwned`);
             ownedControlsElement.appendChild(ownedCheckbox);
 
-            var notOwnedCheckbox = createCheckbox(`Not Owned`, notOwned, toggleNotOwned, null);
+            var notOwnedCheckbox = createCheckbox(`Not Owned`, window.injectedFilters.owned.notOwned, toggleNotOwned, null);
             ownedControlsElement.appendChild(notOwnedCheckbox);
 
             controlsElement.appendChild(ownedControlsElement);
@@ -61,19 +66,19 @@
             rarityControlsElement.className = `filter-controls-rarity`;
 
             //Rarity
-            var commonCheckbox = createCheckbox(`Common`, common, toggleCommon, null);
+            var commonCheckbox = createCheckbox(`Common`, window.injectedFilters.rarity.common, toggleCommon, null);
             rarityControlsElement.appendChild(commonCheckbox);
 
-            var uncommonCheckbox = createCheckbox(`Uncommon`, uncommon, toggleUncommon, null);
+            var uncommonCheckbox = createCheckbox(`Uncommon`, window.injectedFilters.rarity.uncommon, toggleUncommon, null);
             rarityControlsElement.appendChild(uncommonCheckbox);
 
-            var rareCheckbox = createCheckbox(`Rare`, rare, toggleRare, null);
+            var rareCheckbox = createCheckbox(`Rare`, window.injectedFilters.rarity.rare, toggleRare, null);
             rarityControlsElement.appendChild(rareCheckbox);
 
-            var ultraRareCheckbox = createCheckbox(`Ultra Rare`, ultraRare, toggleUltraRare, null);
+            var ultraRareCheckbox = createCheckbox(`Ultra Rare`, window.injectedFilters.rarity.ultraRare, toggleUltraRare, null);
             rarityControlsElement.appendChild(ultraRareCheckbox);
 
-            var legendaryCheckbox = createCheckbox(`Legendary`, legendary, toggleLegendary, null);
+            var legendaryCheckbox = createCheckbox(`Legendary`, window.injectedFilters.rarity.legendary, toggleLegendary, null);
             rarityControlsElement.appendChild(legendaryCheckbox);
 
             controlsElement.appendChild(rarityControlsElement);
@@ -81,14 +86,14 @@
             filterContainer.appendChild(controlsElement);
         }
 
-        if ((addMulti) && (doControlsExist(document, `.reqCard`)) && (!doControlsExist(filterContainer, `#cbx_ifcMulti`))) {
+        if ((window.injectedFilters.owned.addMulti) && (doControlsExist(document, `.reqCard`)) && (!doControlsExist(filterContainer, `#cbx_ifcMulti`))) {
             try {
                 if (hasContainerCount(document.querySelector(`.reqCard`))) {
-                    var multiCheckbox = createCheckbox(`> 1`, multi, toggleMulti, `ifcMulti`);
+                    var multiCheckbox = createCheckbox(`> 1`, window.injectedFilters.owned.multi, toggleMulti, `ifcMulti`);
                     document.getElementById(`ifcOwned`).appendChild(multiCheckbox);
                 }
             } catch {
-                addMulti = false;
+                window.injectedFilters.owned.addMulti = false;
             }
         }
     }
@@ -119,42 +124,56 @@
     }
 
     function toggleOwned(event) {
-        owned = event.target.checked;
+        window.injectedFilters.owned.owned = event.target.checked;
+
+        if ((!window.injectedFilters.owned.owned)
+        && (window.injectedFilters.owned.multi)) {
+            window.injectedFilters.owned.multi = event.target.checked;
+            document.getElementById(`cbx_ifcMulti`).checked = event.target.checked;
+        }
+
         onBodyChange();
     }
 
     function toggleNotOwned(event) {
-        notOwned = event.target.checked;
+        window.injectedFilters.owned.notOwned = event.target.checked;
         onBodyChange();
     }
 
     function toggleMulti(event) {
-        multi = event.target.checked;
+        window.injectedFilters.owned.multi = event.target.checked;
+
+        if ((window.injectedFilters.owned.multi)
+        && (!window.injectedFilters.owned.owned)) {
+            window.injectedFilters.owned.owned = event.target.checked;
+            document.getElementById(`cbx_ifcOwned`).checked = event.target.checked;
+        }
+
         onBodyChange();
     }
 
     function toggleCommon(event) {
-        common = event.target.checked;
+        window.injectedFilters.rarity.common = event.target.checked;
         onBodyChange();
     }
 
     function toggleUncommon(event) {
-        uncommon = event.target.checked;
+        window.injectedFilters.rarity.uncommon = event.target.checked;
         onBodyChange();
     }
 
     function toggleRare(event) {
-        rare = event.target.checked;
+        window.injectedFilters.rarity.rare = event.target.checked;
         onBodyChange();
     }
 
     function toggleUltraRare(event) {
-        ultraRare = event.target.checked;
+        window.injectedFilters.rarity.ultraRare = event.target.checked;
         onBodyChange();
     }
 
     function toggleLegendary(event) {
-        legendary = event.target.checked;
+        window.injectedFilters.rarity.legendary = event.target.checked;
         onBodyChange();
     }
 
@@ -210,14 +229,15 @@
         var isOwned = isContainerOwned(container);
         var isNotOwned = !isContainerOwned(container);
 
-        if ((!owned && isOwned) || (!notOwned && isNotOwned)) {
+        if ((!window.injectedFilters.owned.owned && isOwned)
+        || (!window.injectedFilters.owned.notOwned && isNotOwned)) {
             showContainer = false;
         }
 
         if (hasContainerCount(container)) {
             var isMulti = isContainerMulti(container);
 
-            if (multi && !isMulti) {
+            if (window.injectedFilters.owned.multi && !isMulti) {
                 showContainer = false;
             }
         }
@@ -228,27 +248,27 @@
     function validateRarity(container, showContainer) {
         switch(getContainerRarity(container)) {
             case `COMMON`:
-                if (!common) {
+                if (!window.injectedFilters.rarity.common) {
                     showContainer = false;
                 }
                 break;
             case `UNCOMMON`:
-                if (!uncommon) {
+                if (!window.injectedFilters.rarity.uncommon) {
                     showContainer = false;
                 }
                 break;
             case `RARE`:
-                if (!rare) {
+                if (!window.injectedFilters.rarity.rare) {
                     showContainer = false;
                 }
                 break;
             case `ULTRARARE`:
-                if (!ultraRare) {
+                if (!window.injectedFilters.rarity.ultraRare) {
                     showContainer = false;
                 }
                 break;
             case `LEGENDARY`:
-                if (!legendary) {
+                if (!window.injectedFilters.rarity.legendary) {
                     showContainer = false;
                 }
                 break;
