@@ -1,32 +1,32 @@
 #btn_ifcFilter {
-  position: 'fixed';
-  top: '160px';
-  right: '100px';
-  zIndex: '100px';
+    position: fixed;
+    top: 160px;
+    right: 100px;
+    zIndex: 100px;
 }
 
 .filter-section {
-  position: 'fixed';
-  top: '220px';
-  right: '100px';
-  zIndex: '100px';
-  width: '140px';
-  borderRadius: '10px';
-  padding: '5px';
-  color: '#f5f5f5';
-  background-color: '#262626';
+    position: fixed;
+    top: 220px;
+    right: 100px;
+    zIndex: 100px;
+    width: 140px;
+    borderRadius: 10px;
+    padding: 5px;
+    color: #f5f5f5;
+    background-color: #262626;
 }
 
 .filter-dropdown {
 }
 
 .filter-block {
-  padding: '5px';
+    padding: 5px;
 }
 
 .filter-block .title {
 }
 
 .filter-options {
-  padding: '5px';
+    padding: 5px;
 }
