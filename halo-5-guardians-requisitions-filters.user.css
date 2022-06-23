@@ -1,13 +1,13 @@
 .halo-5-req-points_points__1_U4l {
-    position: 'fixed',
-    top: '100px',
-    right: '100px',
-    zIndex: '10000'
+    position: 'fixed';
+    top: '100px';
+    right: '100px';
+    zIndex: '10000';
 }
 
 #btn_ifcFilter {
-    position: 'fixed',
-    top: '160px',
-    right: '100px',
-    zIndex: '10000'
+    position: 'fixed';
+    top: '160px';
+    right: '100px';
+    zIndex: '10000';
 }
