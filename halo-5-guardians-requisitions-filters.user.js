@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Halo 5 Guardians Requisitions
 // @namespace    https://github.com/zellreid/halo-5-guardians-requisitions-filters
-// @version      2.5
+// @version      4.4
 // @description  A Tampermonkey userscript to add additional asset filters to the Halo 5 Guardians Requisitions
 // @author       ZellReid
 // @homepage     https://github.com/zellreid/halo-5-guardians-requisitions-filters
@@ -10,125 +10,325 @@
 // @match        https://www.halowaypoint.com/en/halo-5-guardians/requisitions*
 // @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
 // @run-at       document-body
-// @grant        none
+// @resource     JSJQuery https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js
+// @resource     JSBootstrap https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.min.js
+// @resource     JSSelect2 https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js
+// @resource     CSSSelect2 https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css
+// @resource     CSSSelect2 https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css
+// @resource     CSSFilter https://raw.githubusercontent.com/zellreid/halo-5-guardians-requisitions-filters/main/halo-5-guardians-requisitions-filters.user.css?ver=4.4
+// @resource     IMGFilter https://raw.githubusercontent.com/zellreid/halo-5-guardians-requisitions-filters/dfe2d6891ccc3dadca173bf852e51b721b4f7f06/filter.png
+// @grant        GM_getResourceURL
 // ==/UserScript==
 
 (function() {
     `use strict`;
 
-    window.injectedFilters = {
-        owned: {
-            owned: true,
-            notOwned: true,
-            multi: false,
-            addMulti: true
+    window.injected = {
+        info: GM_info,
+        scripts: [],
+        styles: [],
+        ui: {
+            floatReq: false,
+            btnFilter: false,
+            divFilter: false,
+            divFilterShow: false
         },
-        rarity: {
-            common: true,
-            uncommon: true,
-            rare: true,
-            ultraRare: true,
-            legendary: true
+        filters: {
+            owned: {
+                owned: true,
+                notOwned: true,
+                multi: false,
+                addMulti: true
+            },
+            rarity: {
+                common: true,
+                uncommon: true,
+                rare: true,
+                ultraRare: true,
+                legendary: true
+            }
         }
     };
 
-    function getFilterContainer() {
-        return document.getElementsByClassName(`service-record-header_header__132KP`)[0];
+    addScript(GM_getResourceURL (`JSJQuery`));
+    addScript(GM_getResourceURL (`JSBootstrap`));
+    //addScript(GM_getResourceURL (`JSSelect2`));
+
+    //addStyle(GM_getResourceURL (`CSSSelect2`));
+    addStyle(GM_getResourceURL (`CSSFilter`));
+
+    function addScript(src){
+        return new Promise(function (resolve, reject) {
+            var loadScript = !isScriptAdded(src);
+
+            if (loadScript) {
+                let script = document.createElement(`script`);
+                script.type = `text/javascript`;
+                script.src = src;
+
+                script.onload = () => resolve({ success: true });
+                script.onerror = () => reject(new Error(`Script load error: ` + src));
+
+                document.head.appendChild(script);
+                window.injected.scripts.push(script);
+            } else {
+                resolve({ success: true });
+            }
+        });
     }
+
+    function isScriptAdded(src) {
+        var added = false;
+
+        window.injected.scripts.forEach(
+            function (script) {
+                if (script.src == src) {
+                    added = true;
+                }
+            });
+
+        return added;
+    };
+
+    function addStyle(href){
+        return new Promise(function (resolve, reject) {
+            var loadStyle = !isStyleAdded(href);
+
+            if (loadStyle) {
+                let style = document.createElement(`link`);
+                style.rel = `stylesheet`;
+                style.type = `text/css`;
+                style.href = href;
+                document.head.appendChild(style);
+                window.injected.styles.push(style);
+                resolve({ success: true });
+            } else {
+                resolve({ success: true });
+            }
+        });
+    }
+
+    function isStyleAdded(href) {
+        var added = false;
+
+        window.injected.styles.forEach(
+            function (style) {
+                if (style.href == href) {
+                    added = true;
+                }
+            });
+
+        return added;
+    };
 
     function doControlsExist(container, controlQuery) {
         return container.querySelector(controlQuery);
     }
 
-    function addFilterControls() {
-        var filterContainer = getFilterContainer();
+    function uiInjections() {
+        floatReqPoints();
+    }
 
-        if (!doControlsExist(filterContainer, `#injectedFilterControls`)) {
-            var controlsElement = document.createElement(`span`)
-            controlsElement.id = `injectedFilterControls`;
-            controlsElement.className = `filter-controls`;
+    function floatReqPoints() {
+        var target = `.halo-5-req-points_points__1_U4l`;
 
-            var ownedControlsElement = document.createElement(`fieldset`);
-            ownedControlsElement.id = `ifcOwned`;
-            ownedControlsElement.className = `filter-controls-owned`;
-
-            //Owned
-            var ownedCheckbox = createCheckbox(`Owned`, window.injectedFilters.owned.owned, toggleOwned, `ifcOwned`);
-            ownedControlsElement.appendChild(ownedCheckbox);
-
-            var notOwnedCheckbox = createCheckbox(`Not Owned`, window.injectedFilters.owned.notOwned, toggleNotOwned, null);
-            ownedControlsElement.appendChild(notOwnedCheckbox);
-
-            controlsElement.appendChild(ownedControlsElement);
-
-            var rarityControlsElement = document.createElement(`fieldset`);
-            rarityControlsElement.id = `ifcRarity`;
-            rarityControlsElement.className = `filter-controls-rarity`;
-
-            //Rarity
-            var commonCheckbox = createCheckbox(`Common`, window.injectedFilters.rarity.common, toggleCommon, null);
-            rarityControlsElement.appendChild(commonCheckbox);
-
-            var uncommonCheckbox = createCheckbox(`Uncommon`, window.injectedFilters.rarity.uncommon, toggleUncommon, null);
-            rarityControlsElement.appendChild(uncommonCheckbox);
-
-            var rareCheckbox = createCheckbox(`Rare`, window.injectedFilters.rarity.rare, toggleRare, null);
-            rarityControlsElement.appendChild(rareCheckbox);
-
-            var ultraRareCheckbox = createCheckbox(`Ultra Rare`, window.injectedFilters.rarity.ultraRare, toggleUltraRare, null);
-            rarityControlsElement.appendChild(ultraRareCheckbox);
-
-            var legendaryCheckbox = createCheckbox(`Legendary`, window.injectedFilters.rarity.legendary, toggleLegendary, null);
-            rarityControlsElement.appendChild(legendaryCheckbox);
-
-            controlsElement.appendChild(rarityControlsElement);
-
-            filterContainer.appendChild(controlsElement);
+        if ((!window.injected.ui.floatReq)
+        && (doControlsExist(document.body, target))) {
+            var container = document.querySelector(target);
+            container.style.position = `fixed`;
+            container.style.top = `100px`;
+            container.style.right = `100px`;
+            container.style.zIndex = `10000`;
+            window.injected.ui.floatReq = true;
         }
+    }
 
-        if ((window.injectedFilters.owned.addMulti) && (doControlsExist(document, `.reqCard`)) && (!doControlsExist(filterContainer, `#cbx_ifcMulti`))) {
-            try {
-                if (hasContainerCount(document.querySelector(`.reqCard`))) {
-                    var multiCheckbox = createCheckbox(`> 1`, window.injectedFilters.owned.multi, toggleMulti, `ifcMulti`);
-                    document.getElementById(`ifcOwned`).appendChild(multiCheckbox);
+    function addFilterControls() {
+        addFilterButton();
+        addFilterContainer();
+        addFilterContainerOwned();
+        addFilterContainerRarity();
+    }
+
+    function addFilterButton() {
+        if (!window.injected.ui.btnFilter) {
+            var imgContainer = createImageLink(`btn_ifcFilter`, GM_getResourceURL (`IMGFilter`), `Filter`);
+            document.body.appendChild(imgContainer);
+            window.injected.ui.btnFilter = true;
+        }
+    }
+
+    function addFilterContainer() {
+        if ((!window.injected.ui.divFilter)
+        && (!doControlsExist(document.body, `#injectedFilterControls`))) {
+            var mainDivContainer = document.createElement(`div`);
+            mainDivContainer.id = `injectedFilterControls`;
+            mainDivContainer.className = `filter-section`;
+            mainDivContainer.style.display = `none`;
+
+            var articleContainer = document.createElement(`article`);
+
+            var divContainer = document.createElement(`div`);
+            divContainer.className = `filter-dropdown`;
+
+            articleContainer.appendChild(divContainer);
+            mainDivContainer.appendChild(articleContainer);
+            document.body.appendChild(mainDivContainer);
+            window.injected.ui.divFilter = true;
+
+            var imgContainer = document.querySelector(`#btn_ifcFilter`);
+            imgContainer.addEventListener(`click`, toggleFilterContainer);
+        }
+    }
+
+    function addFilterContainerOwned() {
+        if (window.injected.ui.divFilter) {
+            if (!doControlsExist(document.body, `#ifcOwned`)) {
+                var mainContainer = document.querySelector(`#injectedFilterControls .filter-dropdown`);
+                var divContainer = createFilterBlock(`ifcOwned`, `Owned`);
+                mainContainer.appendChild(divContainer);
+
+                //Owned
+                var checkboxOwned = createCheckbox(`ifcOwned`, `Owned`, window.injected.filters.owned.owned, toggleOwned);
+                addFilterOption(document.getElementById(`ifcOwned`), checkboxOwned);
+
+                var checkboxNotOwned = createCheckbox(null, `Not Owned`, window.injected.filters.owned.notOwned, toggleNotOwned, null);
+                addFilterOption(document.getElementById(`ifcOwned`), checkboxNotOwned);
+            }
+
+            if ((window.injected.filters.owned.addMulti) && (doControlsExist(document, `.reqCard`)) && (!doControlsExist(document.body, `#cbx_ifcMulti`))) {
+                try {
+                    if (hasContainerCount(document.querySelector(`.reqCard`))) {
+                        var checkboxMulti = createCheckbox(`ifcMulti`, `> 1`, window.injected.filters.owned.multi, toggleMulti);
+                        addFilterOption(document.getElementById(`ifcOwned`), checkboxMulti);
+                    }
+                } catch {
+                    window.injected.filters.owned.addMulti = false;
                 }
-            } catch {
-                window.injectedFilters.owned.addMulti = false;
             }
         }
     }
 
-    function createCheckbox(text, initial, onChange, id) {
-        var labelElement = document.createElement(`label`);
-        labelElement.style.marginLeft = `5px`;
-        labelElement.style.marginRight = `5px`;
-        labelElement.style.color = `white`;
+    function addFilterContainerRarity() {
+        if ((window.injected.ui.divFilter)
+        && (!doControlsExist(document.body, `#ifcRarity`))) {
+            var mainContainer = document.querySelector(`#injectedFilterControls .filter-dropdown`);
+            var divContainer = createFilterBlock(`ifcRarity`, `Rarity`);
+            mainContainer.appendChild(divContainer);
 
-        var checkboxElement = document.createElement(`input`);
-        checkboxElement.type = `checkbox`;
-        checkboxElement.checked = initial;
-        checkboxElement.style.marginRight = `3px`;
-        checkboxElement.addEventListener(`change`, onChange);
+            //Rarity
+            var checkboxCommon = createCheckbox(null, `Common`, window.injected.filters.rarity.common, toggleCommon);
+            addFilterOption(document.getElementById(`ifcRarity`), checkboxCommon);
 
+            var checkboxUncommon = createCheckbox(null, `Uncommon`, window.injected.filters.rarity.uncommon, toggleUncommon);
+            addFilterOption(document.getElementById(`ifcRarity`), checkboxUncommon);
+
+            var checkboxRare = createCheckbox(null, `Rare`, window.injected.filters.rarity.rare, toggleRare);
+            addFilterOption(document.getElementById(`ifcRarity`), checkboxRare);
+
+            var checkboxUltraRare = createCheckbox(null, `Ultra Rare`, window.injected.filters.rarity.ultraRare, toggleUltraRare);
+            addFilterOption(document.getElementById(`ifcRarity`), checkboxUltraRare);
+
+            var checkboxLegendary = createCheckbox(null, `Legendary`, window.injected.filters.rarity.legendary, toggleLegendary);
+            addFilterOption(document.getElementById(`ifcRarity`), checkboxLegendary);
+        }
+    }
+
+    function createFilterBlock(id, text) {
+        var container = document.createElement(`div`);
         if (id != null) {
-            labelElement.id = `lbl_` + id;
-            checkboxElement.id = `cbx_` + id;
+            container.id = id;
         }
 
-        labelElement.appendChild(checkboxElement);
+        container.className = `filter-block`;
 
-        var textElement = document.createTextNode(text);
-        labelElement.appendChild(textElement);
+        var pContainer = document.createElement(`p`);
+        container.className = `title`;
 
-        return labelElement;
+        var spanContainer = document.createElement(`span`);
+
+        if (id != null) {
+            var textContainer = document.createTextNode(text);
+            spanContainer.appendChild(textContainer);
+        }
+
+        pContainer.appendChild(spanContainer);
+        container.appendChild(pContainer);
+
+        var ulContainer = document.createElement(`ul`);
+        ulContainer.className = `filter-options`;
+
+        container.appendChild(pContainer);
+        container.appendChild(ulContainer);
+        return container;
+    }
+
+    function addFilterOption(container, control) {
+        var optionsContainer = container.querySelector(`.filter-options`);
+        var liContainer = document.createElement(`li`);
+        liContainer.appendChild(control);
+        optionsContainer.appendChild(liContainer);
+    }
+
+    function createImageLink(id, src, text) {
+        var aContainer = document.createElement(`a`);
+
+        if (id != null) {
+            aContainer.id = id;
+        }
+
+        var imgContainer = document.createElement(`img`);
+        imgContainer.src = src;
+        imgContainer.alt = text;
+        imgContainer.title = text;
+
+        aContainer.appendChild(imgContainer);
+        return aContainer;
+    }
+
+    function createCheckbox(id, text, initial, onChange) {
+        var labelContainer = document.createElement(`label`);
+        labelContainer.style.marginLeft = `5px`;
+        labelContainer.style.marginRight = `5px`;
+
+        var checkboxContainer = document.createElement(`input`);
+        checkboxContainer.type = `checkbox`;
+        checkboxContainer.checked = initial;
+        checkboxContainer.style.marginRight = `3px`;
+        checkboxContainer.addEventListener(`change`, onChange);
+
+        if (id != null) {
+            labelContainer.id = `lbl_` + id;
+            checkboxContainer.id = `cbx_` + id;
+        }
+
+        labelContainer.appendChild(checkboxContainer);
+
+        var textContainer = document.createTextNode(text);
+        labelContainer.appendChild(textContainer);
+
+        return labelContainer;
+    }
+
+    function toggleFilterContainer(event) {
+        window.injected.ui.divFilterShow = !window.injected.ui.divFilterShow;
+        var mainContainer = document.querySelector(`#injectedFilterControls`);
+
+        if (!window.injected.ui.divFilterShow) {
+            mainContainer.style.display = `none`;
+        } else {
+            mainContainer.style.display = null;
+        }
+
+        onBodyChange();
     }
 
     function toggleOwned(event) {
-        window.injectedFilters.owned.owned = event.target.checked;
+        window.injected.filters.owned.owned = event.target.checked;
 
-        if ((!window.injectedFilters.owned.owned)
-        && (window.injectedFilters.owned.multi)) {
-            window.injectedFilters.owned.multi = event.target.checked;
+        if ((!window.injected.filters.owned.owned)
+        && (window.injected.filters.owned.multi)) {
+            window.injected.filters.owned.multi = event.target.checked;
             document.getElementById(`cbx_ifcMulti`).checked = event.target.checked;
         }
 
@@ -136,16 +336,16 @@
     }
 
     function toggleNotOwned(event) {
-        window.injectedFilters.owned.notOwned = event.target.checked;
+        window.injected.filters.owned.notOwned = event.target.checked;
         onBodyChange();
     }
 
     function toggleMulti(event) {
-        window.injectedFilters.owned.multi = event.target.checked;
+        window.injected.filters.owned.multi = event.target.checked;
 
-        if ((window.injectedFilters.owned.multi)
-        && (!window.injectedFilters.owned.owned)) {
-            window.injectedFilters.owned.owned = event.target.checked;
+        if ((window.injected.filters.owned.multi)
+        && (!window.injected.filters.owned.owned)) {
+            window.injected.filters.owned.owned = event.target.checked;
             document.getElementById(`cbx_ifcOwned`).checked = event.target.checked;
         }
 
@@ -153,27 +353,27 @@
     }
 
     function toggleCommon(event) {
-        window.injectedFilters.rarity.common = event.target.checked;
+        window.injected.filters.rarity.common = event.target.checked;
         onBodyChange();
     }
 
     function toggleUncommon(event) {
-        window.injectedFilters.rarity.uncommon = event.target.checked;
+        window.injected.filters.rarity.uncommon = event.target.checked;
         onBodyChange();
     }
 
     function toggleRare(event) {
-        window.injectedFilters.rarity.rare = event.target.checked;
+        window.injected.filters.rarity.rare = event.target.checked;
         onBodyChange();
     }
 
     function toggleUltraRare(event) {
-        window.injectedFilters.rarity.ultraRare = event.target.checked;
+        window.injected.filters.rarity.ultraRare = event.target.checked;
         onBodyChange();
     }
 
     function toggleLegendary(event) {
-        window.injectedFilters.rarity.legendary = event.target.checked;
+        window.injected.filters.rarity.legendary = event.target.checked;
         onBodyChange();
     }
 
@@ -229,15 +429,15 @@
         var isOwned = isContainerOwned(container);
         var isNotOwned = !isContainerOwned(container);
 
-        if ((!window.injectedFilters.owned.owned && isOwned)
-        || (!window.injectedFilters.owned.notOwned && isNotOwned)) {
+        if ((!window.injected.filters.owned.owned && isOwned)
+        || (!window.injected.filters.owned.notOwned && isNotOwned)) {
             showContainer = false;
         }
 
         if (hasContainerCount(container)) {
             var isMulti = isContainerMulti(container);
 
-            if (window.injectedFilters.owned.multi && !isMulti) {
+            if (window.injected.filters.owned.multi && !isMulti) {
                 showContainer = false;
             }
         }
@@ -248,27 +448,27 @@
     function validateRarity(container, showContainer) {
         switch(getContainerRarity(container)) {
             case `COMMON`:
-                if (!window.injectedFilters.rarity.common) {
+                if (!window.injected.filters.rarity.common) {
                     showContainer = false;
                 }
                 break;
             case `UNCOMMON`:
-                if (!window.injectedFilters.rarity.uncommon) {
+                if (!window.injected.filters.rarity.uncommon) {
                     showContainer = false;
                 }
                 break;
             case `RARE`:
-                if (!window.injectedFilters.rarity.rare) {
+                if (!window.injected.filters.rarity.rare) {
                     showContainer = false;
                 }
                 break;
             case `ULTRARARE`:
-                if (!window.injectedFilters.rarity.ultraRare) {
+                if (!window.injected.filters.rarity.ultraRare) {
                     showContainer = false;
                 }
                 break;
             case `LEGENDARY`:
-                if (!window.injectedFilters.rarity.legendary) {
+                if (!window.injected.filters.rarity.legendary) {
                     showContainer = false;
                 }
                 break;
@@ -294,8 +494,12 @@
     }
 
     function onBodyChange(mut) {
-        addFilterControls();
-        toggleContainers(`reqCard`);
+        uiInjections();
+
+        if (doControlsExist(document, `.reqCard`)) {
+            addFilterControls();
+            toggleContainers(`reqCard`);
+        }
     }
 
     var mo = new MutationObserver(onBodyChange);
