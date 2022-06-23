@@ -5,6 +5,10 @@
     zIndex: 100px;
 }
 
+#btn_ifcFilter:hover {
+    cursor: pointer;
+}
+
 .filter-section {
     position: fixed;
     top: 220px;
