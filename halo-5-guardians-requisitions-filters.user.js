@@ -10,7 +10,7 @@
 // @match        https://www.halowaypoint.com/en/halo-5-guardians/requisitions*
 // @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
 // @run-at       document-body
-// @resource     CSSFilter https://raw.githubusercontent.com/zellreid/halo-5-guardians-requisitions-filters/main/halo-5-guardians-requisitions-filters.user.css?ver=6.0
+// @resource     CSSFilter https://raw.githubusercontent.com/zellreid/halo-5-guardians-requisitions-filters/main/halo-5-guardians-requisitions-filters.user.css
 // @resource     IMGFilter https://raw.githubusercontent.com/zellreid/halo-5-guardians-requisitions-filters/dfe2d6891ccc3dadca173bf852e51b721b4f7f06/filter.png
 // @grant        GM_getResourceURL
 // @grant        GM_setValue
