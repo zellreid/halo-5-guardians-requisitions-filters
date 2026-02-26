@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Halo 5 Guardians Requisitions
 // @namespace    https://github.com/zellreid/halo-5-guardians-requisitions-filters
-// @version      6.0.26057.2
+// @version      6.0.26057.3
 // @description  A Tampermonkey userscript to add additional asset filters to the Halo 5 Guardians Requisitions
 // @author       ZellReid
 // @homepage     https://github.com/zellreid/halo-5-guardians-requisitions-filters
