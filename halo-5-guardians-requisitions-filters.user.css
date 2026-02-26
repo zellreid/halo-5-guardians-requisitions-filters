@@ -1,36 +1,267 @@
-#btn_ifcFilter {
+/* ==================== FILTER LABEL ==================== */
+.ifc-filter-label {
     position: fixed;
-    top: 160px;
+    top: 100px;
+    right: 160px;
+    z-index: 10000;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #f5f5f5;
+    background-color: rgba(38, 38, 38, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+
+/* ==================== FILTER BUTTON ==================== */
+#ifc_btn_Filter {
+    position: fixed;
+    top: 140px;
     right: 100px;
-    z-index: 100px;
+    z-index: 10000;
 }
 
-#btn_ifcFilter:hover {
+#ifc_btn_Filter:hover {
     cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.15s ease;
 }
 
+/* ==================== FILTER PANEL ==================== */
 .filter-section {
     position: fixed;
-    top: 220px;
+    top: 200px;
     right: 100px;
-    z-index: 100px;
-    width: 140px;
+    z-index: 10000;
+    width: 220px;
     border-radius: 10px;
-    padding: 5px;
+    padding: 15px;
     color: #f5f5f5;
-    background-color: #262626;
+    background-color: rgba(38, 38, 38, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
 }
 
-.filter-dropdown {
+.filter-text-heading {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #f5f5f5;
+    margin: 0 0 10px 0;
+    padding: 0;
 }
 
-.filter-block {
-    padding: 5px;
+.filter-groups {
+    padding: 0;
+    margin: 0;
+    list-style: none;
 }
 
-.filter-block .title {
+/* ==================== TAG CONTAINER ==================== */
+.ifc-tag-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 0;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(117, 117, 117, 0.3);
 }
 
-.filter-options {
-    padding: 5px;
+.ifc-filter-tag {
+    display: inline-flex;
+    align-items: center;
+    background-color: #1e6bc4;
+    color: #ffffff;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    gap: 5px;
+}
+
+.ifc-tag-remove {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ifc-tag-remove:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+/* ==================== ACCORDION ==================== */
+.ifc-accordion-group {
+    list-style: none;
+    border-bottom: 1px solid rgba(117, 117, 117, 0.3);
+}
+
+.ifc-accordion-group:first-child {
+    border-top: 1px solid rgba(117, 117, 117, 0.3);
+}
+
+.ifc-accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 4px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #f5f5f5;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: left;
+    transition: opacity 0.15s ease;
+}
+
+.ifc-accordion-header:hover {
+    opacity: 0.8;
+}
+
+.ifc-accordion-header:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: -2px;
+    border-radius: 2px;
+}
+
+.ifc-accordion-title {
+    flex: 1;
+    pointer-events: none;
+}
+
+.ifc-accordion-chevron {
+    font-size: 0.625rem;
+    pointer-events: none;
+    transition: transform 0.15s ease;
+}
+
+.ifc-accordion-content {
+    padding: 0 4px 12px 4px;
+}
+
+/* ==================== CUSTOM CHECKBOXES ==================== */
+.ifc-checkbox-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+}
+
+.ifc-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 4px;
+    cursor: pointer;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: #f5f5f5;
+    user-select: none;
+    transition: opacity 0.1s ease;
+}
+
+.ifc-checkbox-item:hover {
+    opacity: 0.8;
+}
+
+.ifc-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 14px;
+    height: 14px;
+    min-width: 14px;
+    min-height: 14px;
+    border: 1.5px solid #f5f5f5;
+    border-radius: 2px;
+    background-color: transparent;
+    cursor: pointer;
+    position: relative;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.ifc-checkbox:checked {
+    background-color: #f5f5f5;
+}
+
+.ifc-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    top: 0px;
+    left: 3.5px;
+    width: 4px;
+    height: 8px;
+    border: solid;
+    border-width: 0 2px 2px 0;
+    border-color: #262626;
+    transform: rotate(45deg);
+}
+
+.ifc-checkbox:focus-visible {
+    outline: 2px solid #f5f5f5;
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+.ifc-checkbox-label {
+    flex: 1;
+    line-height: 1.25rem;
+    pointer-events: none;
+}
+
+/* ==================== SCROLLBAR STYLING ==================== */
+.filter-section::-webkit-scrollbar {
+    width: 6px;
+}
+
+.filter-section::-webkit-scrollbar-track {
+    background: rgba(117, 117, 117, 0.2);
+    border-radius: 3px;
+}
+
+.filter-section::-webkit-scrollbar-thumb {
+    background: #757575;
+    border-radius: 3px;
+}
+
+.filter-section::-webkit-scrollbar-thumb:hover {
+    background: #999999;
+}
+
+/* ==================== RESPONSIVE ADJUSTMENTS ==================== */
+@media (max-width: 768px) {
+    .filter-section {
+        width: calc(100vw - 40px);
+        right: 20px;
+        max-height: calc(100vh - 120px);
+    }
+
+    #ifc_btn_Filter {
+        right: 20px;
+    }
+
+    .ifc-filter-label {
+        right: 80px;
+        font-size: 0.75rem;
+    }
 }
