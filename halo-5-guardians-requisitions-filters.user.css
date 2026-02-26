@@ -1,7 +1,7 @@
 /* ==================== FILTER LABEL ==================== */
 .ifc-filter-label {
     position: fixed;
-    top: 100px;
+    top: 175px;
     right: 160px;
     z-index: 10000;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -18,7 +18,7 @@
 /* ==================== FILTER BUTTON ==================== */
 #ifc_btn_Filter {
     position: fixed;
-    top: 140px;
+    top: 165px;
     right: 100px;
     z-index: 10000;
 }
@@ -32,7 +32,7 @@
 /* ==================== FILTER PANEL ==================== */
 .filter-section {
     position: fixed;
-    top: 200px;
+    top: 220px;
     right: 100px;
     z-index: 10000;
     width: 220px;

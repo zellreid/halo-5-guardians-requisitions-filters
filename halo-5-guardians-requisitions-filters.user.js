@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Halo 5 Guardians Requisitions
 // @namespace    https://github.com/zellreid/halo-5-guardians-requisitions-filters
-// @version      6.0.26057.3
+// @version      6.0.26057.9
 // @description  A Tampermonkey userscript to add additional asset filters to the Halo 5 Guardians Requisitions
 // @author       ZellReid
 // @homepage     https://github.com/zellreid/halo-5-guardians-requisitions-filters
@@ -10,7 +10,7 @@
 // @match        https://www.halowaypoint.com/en/halo-5-guardians/requisitions*
 // @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
 // @run-at       document-body
-// @resource     CSSFilter https://raw.githubusercontent.com/zellreid/halo-5-guardians-requisitions-filters/main/halo-5-guardians-requisitions-filters.user.css
+// @resource     CSSFilter https://raw.githubusercontent.com/zellreid/halo-5-guardians-requisitions-filters/main/halo-5-guardians-requisitions-filters.user.css?ver=6.0.26057.9
 // @resource     IMGFilter https://raw.githubusercontent.com/zellreid/halo-5-guardians-requisitions-filters/dfe2d6891ccc3dadca173bf852e51b721b4f7f06/filter.png
 // @grant        GM_getResourceURL
 // @grant        GM_setValue
@@ -40,16 +40,19 @@
 
     // ==================== SELECTOR PREFIXES ====================
     const PREFIXES = {
-        reqPoints: 'halo-5-req-points_points__',
+        reqCard:    'halo-5-req-card_reqCard__',
+        reqPoints:  'halo-5-req-points_points__',
+        rarity:     'halo-5-req-card_rarity__',
+        count:      'halo-5-req-card_count__',
     };
 
     // ==================== CONFIGURATION ====================
     const CONFIG = {
         selectors: {
-            reqCard: 'reqCard',
+            reqCard: null,
             reqPoints: null,
-            rarity: '.rarity',
-            count: '.count',
+            rarity: null,
+            count: null,
             filterGroups: '.filter-groups'
         },
         ids: {
@@ -102,6 +105,34 @@
         }
     };
     window.injected = state;
+
+    // ==================== SELECTOR RESOLUTION ====================
+    function resolveSelectors() {
+        clearSelectorCache();
+
+        const reqCardClass = resolveClass(PREFIXES.reqCard);
+        const reqPointsClass = resolveClass(PREFIXES.reqPoints);
+        const rarityClass = resolveClass(PREFIXES.rarity);
+        const countClass = resolveClass(PREFIXES.count);
+
+        if (!reqCardClass) {
+            console.warn('[Halo 5 Reqs] Could not resolve reqCard class. DOM may not be ready.');
+            return false;
+        }
+
+        CONFIG.selectors.reqCard = reqCardClass;
+        CONFIG.selectors.reqPoints = reqPointsClass ? `.${CSS.escape(reqPointsClass)}` : null;
+        CONFIG.selectors.rarity = rarityClass ? `.${CSS.escape(rarityClass)}` : null;
+        CONFIG.selectors.count = countClass ? `.${CSS.escape(countClass)}` : null;
+
+        console.log('[Halo 5 Reqs] Selectors resolved:', {
+            reqCard: CONFIG.selectors.reqCard,
+            reqPoints: CONFIG.selectors.reqPoints,
+            rarity: CONFIG.selectors.rarity,
+            count: CONFIG.selectors.count
+        });
+        return true;
+    }
 
     // ==================== UTILITY FUNCTIONS ====================
     function getElement(selector, useCache = true) {
@@ -292,13 +323,7 @@
         if (state.ui.floatReq) return;
 
         try {
-            // Resolve the hashed class name at runtime
-            if (!CONFIG.selectors.reqPoints) {
-                clearSelectorCache();
-                const reqPointsClass = resolveClass(PREFIXES.reqPoints);
-                if (!reqPointsClass) return;
-                CONFIG.selectors.reqPoints = `.${CSS.escape(reqPointsClass)}`;
-            }
+            if (!CONFIG.selectors.reqPoints) return;
 
             const container = getElement(CONFIG.selectors.reqPoints);
             if (!container) return;
@@ -559,7 +584,6 @@
                 mainContainer.style.display = 'none';
                 if (filterButton) filterButton.setAttribute('aria-pressed', 'false');
             }
-            onBodyChange();
         } catch (ex) {
             console.error('[Halo 5 Reqs] Failed to toggle filter container:', ex);
         }
@@ -652,12 +676,12 @@
     // ==================== ITEM FILTERING ====================
     function toggleContainers() {
         try {
-            const containers = document.getElementsByClassName(CONFIG.selectors.reqCard);
+            const containers = Array.from(document.getElementsByClassName(CONFIG.selectors.reqCard));
 
-            for (const container of containers) {
+            containers.forEach(container => {
                 const showContainer = shouldShowContainer(container);
                 container.style.display = showContainer ? null : 'none';
-            }
+            });
         } catch (ex) {
             console.error('[Halo 5 Reqs] Failed to toggle containers:', ex);
         }
@@ -688,17 +712,32 @@
     }
 
     // ==================== BODY CHANGE HANDLER ====================
+    let _processing = false;
+
     function onBodyChange() {
+        if (_processing) return;
+        _processing = true;
+
         try {
+            if (!CONFIG.selectors.reqCard && !resolveSelectors()) return;
+
             floatReqPoints();
 
-            if (document.querySelector(`.${CONFIG.selectors.reqCard}`)) {
+            if (document.getElementsByClassName(CONFIG.selectors.reqCard).length) {
                 addFilterControls();
-                toggleContainers();
-                updateFilterLabels();
+
+                // Only run filtering once UI is complete, then disconnect the observer
+                if (!state.ui.complete) {
+                    state.ui.complete = true;
+                    observer.disconnect();
+                    updateScreen();
+                    console.log(`[Halo 5 Reqs] v${state.info.script.version} initialized successfully!`);
+                }
             }
         } catch (ex) {
             console.error('[Halo 5 Reqs] Error in body change handler:', ex);
+        } finally {
+            _processing = false;
         }
     }
 
